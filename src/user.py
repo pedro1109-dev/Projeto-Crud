@@ -3,8 +3,10 @@ from connection import get_connet
 from merc import cadastrar_produtos
 from merc import listar_produtos
 from merc import criar_tabela_produtos
+from merc import editar_produt
+from merc import vender
 #importando a biblioteca de criptografia
-from passlib.hash import pbkdf2_sha256 as sha256
+import pwinput
 #Criando tabela
 def criar_tabela():
     try:
@@ -27,8 +29,8 @@ def criar_usuario(nome, email, senha):
         conn = get_connet()
         cursor = conn.cursor()
         #chamando codigo em sql
-        cursor.execute('INSERT INTO TB_USUARIOS(nome, email, senha) VALUES (?, ?, ?)',
-                       (nome, email, senha)
+        cursor.execute('INSERT INTO TB_USUARIO(nome, email, senha) VALUES (?, ?, ?)',
+                       (nome, email, senha,)
         )
 
         conn.commit()
@@ -38,23 +40,6 @@ def criar_usuario(nome, email, senha):
     except Exception as e:
         print(f"Falha ao criar tabela: {e}")
 #Listando usuario
-def listar_usuario():
-    try:
-        conn = get_connet()
-        cursor = conn.cursor()
-        #Chamando codigo em sql
-        cursor.execute('SELECT NOME, EMAIL, SENHA FROM TB_USUARIO')
-        usuarios = cursor.fetchall()
-
-        if usuarios:
-            print(f'{30*'-'}Lista de usuarios{30*'-'}')
-            for u in usuarios:
-                print(f'| {u}')
-        else:
-            print('Nenhum usuário encontrado!')
-
-    except Exception as e:
-        print(f"Falha ao criar tabela: {e}")
 
 def listar_usuario():
     try:
@@ -105,8 +90,8 @@ def menu():
     print('3-Criar tabela de produtos')
     print('4-Cadastrar produtos')
     print('5-Listar Produtos')
-    print('6- Excluir usuario')
-    print('7- Sair do sistema')
+    print('6-Editar produtos ')
+    print('7- Vender')
     print()
 
     
@@ -116,11 +101,9 @@ if __name__=='__main__':
         opcao = input('Digite a opção que deseja utilizar : ')
         match opcao :
             case '1':
-                criar_tabela()
                 nome = input('Digite o nome: ').strip().title()
                 email = input('Digite um email: ').strip()
-                senha = input('Digite uma senha: ').strip()
-                senha = sha256.hash(senha)
+                senha = pwinput.pwinput('Digite uma senha: ').strip()
                 criar_usuario(nome, email, senha)
             case'2':
                 listar_usuario()
@@ -134,8 +117,12 @@ if __name__=='__main__':
             case '5':
                 listar_produtos()
             case '6':
-                ...
-            case '7':
+                editar_produt()
+            case '7' :
+                vender()
+            case '8':
+                criar_tabela()
+            case '9':
                 break
 
     

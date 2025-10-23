@@ -1,6 +1,5 @@
-from connection import get_connet
+from connect import get_connet
 #importando a biblioteca de criptografia
-from passlib.hash import pbkdf2_sha256 as sha256
 import os
 
 limpar = lambda: os.system('cls' if os.name == 'nt' else 'clear')
@@ -11,7 +10,7 @@ def cadastrar_produtos(desc, preço, quant):
         conn = get_connet()
         cursor = conn.cursor()
         #chamando codigo em sql
-        cursor.execute('INSERT INTO TB_PRODUTOS(desc, preço, quant) VALUES (?, ?, ?)',
+        cursor.execute('INSERT INTO TB_PRODUTOS(desc, preco, quant) VALUES (?, ?, ?)',
                        (desc, preço, quant)
         )
 
@@ -27,7 +26,7 @@ def listar_produtos():
         conn = get_connet()
         cursor = conn.cursor()
         #Chamando codigo em sql
-        cursor.execute('SELECT DESC, PREÇO, QUANT  FROM TB_PRODUTOS')
+        cursor.execute('SELECT DESC, PRECO, QUANT  FROM TB_PRODUTOS')
         produtos = cursor.fetchall()
 
         if produtos:
@@ -50,67 +49,58 @@ def criar_tabela_produtos():
         CREATE TABLE TB_PRODUTOS(
             ID INTEGER PRIMARY KEY,
             DESC VARCHAR(120) NOT NULL,
-            PREÇO DECIMAL(120) NOT NULL,
-            QUANT INTENGER(200) NOT NULL
+            PRECO FLOAT(10,2)
+            QUANT INTEGER NOT NULL
         );
         ''')
     except Exception as e:
         print(f"Falha ao criar tabela: {e}")
 
 
-def editar_produt():
+def editar_produt(nova_descricao, novo_preco, id_editar):
     limpar()
     try:
         conn = get_connet()
         cursor = conn.cursor()
-        #Chamando codigo em sql
-        cursor.execute('SELECT DESC, PREÇO, QUANT FROM TB_PRODUTOS')
-        produtos = cursor.fetchone()
-        new = input('Digite o produto que deseja atualizar: ')
-        if produtos:
-            for new in produtos:
-                print(f'Produto encontrado!! {new}')
-                print(f'{30*'='} ATUALIZANDO {30*'='}')
-                nova_desc = input(' Digite a nova descrição do produto :  ')
-                novo_preco = float(input('Digite o novo preço : '))
-                nova_qunat = int(input('Digite a nova quantidade do produto : '))
-                id = input('Digite o ID do produto : ')
-                if nova_desc:
-                    cursor.execute('UPDATE SET DESC = %s, WHERE ID = %s', 
-                                   (nova_desc, id))
-                if novo_preco:
-                    cursor.execute('UPDATE SET PREÇO = %s, WHERE ID = %s', 
-                                   (novo_preco, id))
-                if nova_qunat :
-                    cursor.execute('UPDATE SET QUANT = %s, WHERE ID = %s', 
-                                   (nova_qunat, id))
+        cursor.execute(
+        'UPDATE TB_PRODUTOS SET DESC=?, PRECO=? WHERE ID=?',
+        (nova_descricao, novo_preco, id_editar)
+        )   
+        conn.commit()
+        if cursor.rowcount > 0:
+            print("Produto editado com sucesso!")
         else:
-            print('Nenhum us encontrado!')
+            print("Produto não encontrado.")
 
     except Exception as e:
-        print(f"Falha ao editar tabela: {e}")
+        print(f'Falha ao editar produto: {e}')
+    finally:
+        conn.close()
 
 def vender(id_produto, quant_saida):
     limpar()
     try:
         conn = get_connet()
         cursor = conn.cursor()
-        quant = cursor.execute('SELECT QUANT FROM TB_PRODUTOS WHERE ID = ?',
-                                (id_produto))
-        if quant > 0:
-            if quant > quant_saida:
-                quant_restante = quant - quant_restante
-                cursor.execute('UPDATE SET QUANT = ?, WHERE ID = ?',
-                               (quant_restante, id_produto))
+        cursor.execute('SELECT QUANT FROM TB_PRODUTOS WHERE ID = ?',(id_produto,))
+        quant = cursor.fetchone()
+        if not quant:
+            print('Produto nçao encontrado ')
+        quant = quant[0]
+        if quant >= 0 :
+            if quant >= quant_saida:
+                quant_restante = quant - quant_saida
+                cursor.execute('UPDATE TB_PRODUTOS SET QUANT = ? WHERE ID = ?',
+                               (quant_restante, id_produto,))
             else:
-                print('A quantidade exigida é menor da qual reside no mercado!')
+                print('A quantidade exigida é maior da qual reside no mercado!')
         else:
             print('O produto acabou!!')
-
+        conn.commit()
 
 
 
     except Exception as e:
-        print(f"Falha ao editar tabela: {e}")
+        print(f"Falha ao vender produto: {e}")
 
         
